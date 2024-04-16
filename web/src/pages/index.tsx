@@ -1,10 +1,13 @@
 import Head from "next/head";
 import {Inter} from "next/font/google";
 import Table from "react-bootstrap/Table";
-import {Alert, Container} from "react-bootstrap";
+import {Alert, Container, Pagination} from "react-bootstrap";
 import {GetServerSideProps, GetServerSidePropsContext} from "next";
+import {useState} from "react";
+import {PaginationControl} from "react-bootstrap-pagination-control";
 
 const inter = Inter({subsets: ["latin"]});
+const itemPerPage = 20;
 
 type TUserItem = {
   id: number
@@ -38,6 +41,9 @@ export const getServerSideProps = (async (ctx: GetServerSidePropsContext): Promi
 
 
 export default function Home({statusCode, users}: TGetServerSideProps) {
+  const [totalPages, setTotalPages] = useState(Math.ceil(users.length / itemPerPage))
+  const [currentPage, setCurrentPage] = useState(1)
+
   if (statusCode !== 200) {
     return <Alert variant={'danger'}>Ошибка {statusCode} при загрузке данных</Alert>
   }
@@ -68,7 +74,7 @@ export default function Home({statusCode, users}: TGetServerSideProps) {
             </thead>
             <tbody>
             {
-              users.map((user) => (
+              users.slice((currentPage - 1) * itemPerPage, ((currentPage - 1) * itemPerPage)  + itemPerPage).map((user) => (
                 <tr key={user.id}>
                   <td>{user.id}</td>
                   <td>{user.firstname}</td>
@@ -82,7 +88,21 @@ export default function Home({statusCode, users}: TGetServerSideProps) {
             </tbody>
           </Table>
 
-          {/*TODO add pagination*/}
+          <Pagination>
+            <Pagination.First onClick={() => setCurrentPage(1)}/>
+            <PaginationControl
+                page={currentPage}
+                between={5}
+                total={totalPages}
+                limit={1}
+                changePage={(currentPage) => {
+                  setCurrentPage(currentPage);
+                }}
+                ellipsis={0}
+            />
+            <Pagination.Last onClick={() => setCurrentPage(totalPages)}/>
+          </Pagination>
+
 
         </Container>
       </main>
